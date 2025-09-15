@@ -37,8 +37,10 @@ public class User {
     private String password;
 
     @ManyToMany(mappedBy = "members")
+    @Builder.Default
     private Set<Board> boards = new HashSet<>();
 
     @ManyToMany(mappedBy = "assignees")
+    @Builder.Default
     private Set<Task> assignedTasks = new HashSet<>();
 }

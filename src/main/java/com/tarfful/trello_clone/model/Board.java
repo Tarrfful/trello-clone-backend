@@ -39,14 +39,16 @@ public class Board {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-     @ManyToMany(mappedBy = "boards")
+     @ManyToMany
      @JoinTable(
              name = "board_members",
              joinColumns = @JoinColumn(name = "board_id"),
              inverseJoinColumns = @JoinColumn(name = "user_id"))
+     @Builder.Default
      private Set<User> members = new HashSet<>();
 
      @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+     @Builder.Default
      private List<TaskList> taskLists = new ArrayList<>();
 
 }

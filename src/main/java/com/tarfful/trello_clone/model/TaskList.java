@@ -39,5 +39,6 @@ public class TaskList {
 
      @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
      @OrderBy("taskOrder ASC")
+     @Builder.Default
      private List<Task> tasks = new ArrayList<>();
 }

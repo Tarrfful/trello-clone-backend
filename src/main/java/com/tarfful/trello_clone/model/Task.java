@@ -45,5 +45,6 @@ public class Task {
           joinColumns = @JoinColumn(name = "task_id"),
           inverseJoinColumns = @JoinColumn(name = "user_id")
      )
+     @Builder.Default
      private Set<User> assignees = new HashSet<>();
 }
