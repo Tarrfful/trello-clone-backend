@@ -25,4 +25,10 @@ public class UserServiceImpl implements UserService {
 
         return userRepository.save(newUser);
     }
+
+    @Override
+    public String loginUser(String usernameOrEmail, String password){
+        // TODO: Реализовать логику поиска пользователя в БД, проверки пароля и генерации JWT.
+        return "dummy-jwt-token-for-now";
+    }
 }

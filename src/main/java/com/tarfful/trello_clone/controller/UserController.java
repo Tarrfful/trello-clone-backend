@@ -1,5 +1,7 @@
 package com.tarfful.trello_clone.controller;
 
+import com.tarfful.trello_clone.dto.LoginRequest;
+import com.tarfful.trello_clone.dto.LoginResponce;
 import com.tarfful.trello_clone.dto.RegistrationRequest;
 import com.tarfful.trello_clone.dto.UserResponse;
 import com.tarfful.trello_clone.model.User;
@@ -33,5 +35,12 @@ public class UserController {
         );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponce> loginUser(@RequestBody LoginRequest request){
+        String token = userService.loginUser(request.usernameOrEmail(), request.password());
+        LoginResponce responce = new LoginResponce(token);
+        return ResponseEntity.ok(responce);
     }
 }

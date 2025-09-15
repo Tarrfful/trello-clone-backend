@@ -4,4 +4,6 @@ import com.tarfful.trello_clone.model.User;
 
 public interface UserService {
     User registerUser(String username, String email, String password);
+
+    String loginUser(String usernameOrEmail, String password);
 }
