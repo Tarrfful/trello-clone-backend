@@ -2,8 +2,12 @@ package com.tarfful.trello_clone.service.impl;
 
 import com.tarfful.trello_clone.model.User;
 import com.tarfful.trello_clone.repository.UserRepository;
+import com.tarfful.trello_clone.service.JwtService;
 import com.tarfful.trello_clone.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +16,8 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public User registerUser(String username, String email, String password){
@@ -28,7 +34,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String loginUser(String usernameOrEmail, String password){
-        // TODO: Реализовать логику поиска пользователя в БД, проверки пароля и генерации JWT.
-        return "dummy-jwt-token-for-now";
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(usernameOrEmail, password)
+        );
+
+        String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+        return jwtService.generateToken(username);
     }
 }
