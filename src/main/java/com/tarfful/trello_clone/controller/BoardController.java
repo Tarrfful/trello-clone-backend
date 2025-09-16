@@ -2,12 +2,15 @@ package com.tarfful.trello_clone.controller;
 
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
+import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,5 +33,14 @@ public class BoardController {
     public ResponseEntity<List<BoardResponse>> getUserBoards(){
         List<BoardResponse> boards = boardService.getUserBoards();
         return ResponseEntity.ok(boards);
+    }
+
+    @PutMapping("/{boardId}")
+    public ResponseEntity<BoardResponse> updateBoard(
+            @PathVariable Long boardId,
+            @RequestBody UpdateBoardRequest request
+            ) {
+        BoardResponse updateBoard = boardService.updateBoard(boardId, request);
+        return ResponseEntity.ok(updateBoard);
     }
 }

@@ -2,6 +2,9 @@ package com.tarfful.trello_clone.service.impl;
 
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
+import com.tarfful.trello_clone.dto.UpdateBoardRequest;
+import com.tarfful.trello_clone.exception.BoardNotFoundException;
+import com.tarfful.trello_clone.exception.UnauthorizedException;
 import com.tarfful.trello_clone.model.Board;
 import com.tarfful.trello_clone.model.User;
 import com.tarfful.trello_clone.repository.BoardRepository;
@@ -83,5 +86,27 @@ public class BoardServiceImpl implements BoardService {
                 board.getDescription(),
                 ownerResponse
         );
+    }
+
+    @Override
+    @Transactional
+    public BoardResponse updateBoard(Long boardId, UpdateBoardRequest request){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        Board boardToUpdate = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found: " + boardId));
+
+        if (!boardToUpdate.getOwner().getId().equals(currentUser.getId())){
+            throw new UnauthorizedException("User is not the owner of the board");
+        }
+
+        boardToUpdate.setName(request.name());
+        boardToUpdate.setDescription(request.description());
+
+        Board updatedBoard = boardRepository.save(boardToUpdate);
+
+        return mapBoardToBoardResponse(updatedBoard);
     }
 }
