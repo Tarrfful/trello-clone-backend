@@ -109,4 +109,22 @@ public class BoardServiceImpl implements BoardService {
 
         return mapBoardToBoardResponse(updatedBoard);
     }
+
+    @Override
+    @Transactional
+    public void deleteBoard(Long boardId){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        Board boardToDelete = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found: " + boardId));
+
+        if (!boardToDelete.getOwner().getId().equals(currentUser.getId())){
+            throw new UnauthorizedException("User is not the owner of the board");
+        }
+
+        boardRepository.delete(boardToDelete);
+    }
+
 }
