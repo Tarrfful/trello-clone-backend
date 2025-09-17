@@ -2,6 +2,7 @@ package com.tarfful.trello_clone.controller;
 
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
+import com.tarfful.trello_clone.dto.InviteMemberRequest;
 import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.service.BoardService;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +50,14 @@ public class BoardController {
     public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId){
         boardService.deleteBoard(boardId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{boardId}/members")
+    public  ResponseEntity<BoardResponse> inviteMember(
+            @PathVariable Long boardId,
+            @RequestBody InviteMemberRequest request
+            ){
+        BoardResponse updateBoard = boardService.inviteMember(boardId, request);
+        return ResponseEntity.ok(updateBoard);
     }
 }

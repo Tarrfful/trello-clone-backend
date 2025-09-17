@@ -2,6 +2,7 @@ package com.tarfful.trello_clone.service;
 
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
+import com.tarfful.trello_clone.dto.InviteMemberRequest;
 import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.model.Board;
 
@@ -15,4 +16,6 @@ public interface BoardService {
     BoardResponse updateBoard(Long boardId, UpdateBoardRequest request);
 
     void deleteBoard(Long boardId);
+
+    BoardResponse inviteMember(Long boardId, InviteMemberRequest request);
 }

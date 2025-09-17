@@ -2,6 +2,7 @@ package com.tarfful.trello_clone.service.impl;
 
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
+import com.tarfful.trello_clone.dto.InviteMemberRequest;
 import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.exception.BoardNotFoundException;
 import com.tarfful.trello_clone.exception.UnauthorizedException;
@@ -45,17 +46,7 @@ public class BoardServiceImpl implements BoardService {
 
         Board savedBoard = boardRepository.save(newBoard);
 
-        BoardResponse.OwnerResponse ownerResponse = new BoardResponse.OwnerResponse(
-                currentUser.getId(),
-                currentUser.getUsername()
-        );
-
-        return new BoardResponse(
-                savedBoard.getId(),
-                savedBoard.getName(),
-                savedBoard.getDescription(),
-                ownerResponse
-        );
+        return mapBoardToBoardResponse(savedBoard);
 
     }
 
@@ -80,11 +71,16 @@ public class BoardServiceImpl implements BoardService {
                 board.getOwner().getUsername()
         );
 
+        Set<BoardResponse.MemberResponse> memberResponses = board.getMembers().stream()
+                .map(member -> new BoardResponse.MemberResponse(member.getId(), member.getUsername()))
+                .collect(Collectors.toSet());
+
         return new BoardResponse(
                 board.getId(),
                 board.getName(),
                 board.getDescription(),
-                ownerResponse
+                ownerResponse,
+                memberResponses
         );
     }
 
@@ -127,4 +123,30 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.delete(boardToDelete);
     }
 
+    @Override
+    @Transactional
+    public BoardResponse inviteMember(Long boardId, InviteMemberRequest request){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("Current user not found"));
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found with id: " + boardId));
+
+        if (!board.getOwner().getId().equals(currentUser.getId())){
+            throw new UnauthorizedException("Only the board owner can invite members");
+        }
+
+        User userToInvite = userRepository.findByUsernameOrEmail(request.email(), request.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User to invite not found with email: " + request.email()));
+
+        if (board.getMembers().contains(userToInvite)){
+            return mapBoardToBoardResponse(board);
+        }
+
+        board.getMembers().add(userToInvite);
+        Board updatedBoard = boardRepository.save(board);
+
+        return mapBoardToBoardResponse(updatedBoard);
+    }
 }
