@@ -5,6 +5,7 @@ import com.tarfful.trello_clone.dto.CreateBoardRequest;
 import com.tarfful.trello_clone.dto.InviteMemberRequest;
 import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.exception.BoardNotFoundException;
+import com.tarfful.trello_clone.exception.InvalidOperationException;
 import com.tarfful.trello_clone.exception.UnauthorizedException;
 import com.tarfful.trello_clone.model.Board;
 import com.tarfful.trello_clone.model.User;
@@ -149,4 +150,37 @@ public class BoardServiceImpl implements BoardService {
 
         return mapBoardToBoardResponse(updatedBoard);
     }
+
+    @Override
+    @Transactional
+    public BoardResponse removeMember(Long boardId, Long memberId){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("Current user not found"));
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found with id: " + boardId));
+
+        if (!board.getOwner().getId().equals(currentUser.getId())){
+            throw new UnauthorizedException("Only the board owner can remove members");
+        }
+
+        User userToRemove = userRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("User to remove not found with id: " + memberId));
+
+        if (board.getOwner().getId().equals(userToRemove.getId())){
+            throw new InvalidOperationException("Board owner cannot remove themselves from the board");
+        }
+
+        boolean removed = board.getMembers().removeIf(member -> member.getId().equals(userToRemove.getId()));
+
+        if (!removed){
+            throw new InvalidOperationException("User is not a member of this board");
+        }
+
+        Board updatedBoard = boardRepository.save(board);
+
+        return mapBoardToBoardResponse(updatedBoard);
+    }
+
 }

@@ -18,4 +18,6 @@ public interface BoardService {
     void deleteBoard(Long boardId);
 
     BoardResponse inviteMember(Long boardId, InviteMemberRequest request);
+
+    BoardResponse removeMember(Long boardId, Long memberId);
 }

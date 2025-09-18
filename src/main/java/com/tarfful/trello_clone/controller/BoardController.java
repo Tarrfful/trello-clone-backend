@@ -60,4 +60,13 @@ public class BoardController {
         BoardResponse updateBoard = boardService.inviteMember(boardId, request);
         return ResponseEntity.ok(updateBoard);
     }
+
+    @DeleteMapping("/{boardId}/members/{memberId}")
+    public ResponseEntity<BoardResponse> removeMember(
+            @PathVariable Long boardId,
+            @PathVariable Long memberId
+    ){
+        BoardResponse updatedBoard = boardService.removeMember(boardId, memberId);
+        return ResponseEntity.ok(updatedBoard);
+    }
 }
