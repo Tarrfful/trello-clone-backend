@@ -1,6 +1,6 @@
 package com.tarfful.trello_clone.dto;
 
-public record LoginResponce(
+public record LoginResponse(
         String token
 ) {
 }
