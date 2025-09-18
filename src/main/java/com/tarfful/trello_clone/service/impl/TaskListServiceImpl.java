@@ -11,11 +11,16 @@ import com.tarfful.trello_clone.repository.BoardRepository;
 import com.tarfful.trello_clone.repository.TaskListRepository;
 import com.tarfful.trello_clone.repository.UserRepository;
 import com.tarfful.trello_clone.service.TaskListService;
+import jakarta.persistence.Lob;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Currency;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,16 +32,9 @@ public class TaskListServiceImpl implements TaskListService {
     @Override
     @Transactional
     public TaskListResponse createTaskList(Long boardId, CreateTaskListRequest request){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsernameOrEmail(username, username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Board board = getBoardOrThrow(boardId);
 
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException("Board not found with id: " + boardId));
-
-        if (board.getMembers().stream().noneMatch(member -> member.getId().equals(currentUser.getId()))){
-            throw new UnauthorizedException("User is not a member of this board");
-        }
+        checkMembership(currentUser(), board);
 
         int listOrder = taskListRepository.findMaxListOrderByBoardId(boardId)
                 .map(maxOrder -> maxOrder + 1)
@@ -51,5 +49,34 @@ public class TaskListServiceImpl implements TaskListService {
         TaskList savedList = taskListRepository.save(newTaskList);
 
         return new TaskListResponse(savedList.getId(), savedList.getName(), savedList.getListOrder());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskListResponse> getAllTaskLists(Long boardId){
+        checkMembership(currentUser(), getBoardOrThrow(boardId));
+
+        List<TaskList> taskLists = taskListRepository.findByBoardIdOrderByListOrderAsc(boardId);
+
+        return taskLists.stream()
+                .map(list -> new TaskListResponse(list.getId(), list.getName(), list.getListOrder()))
+                .collect(Collectors.toList());
+    }
+
+    private User currentUser(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private Board getBoardOrThrow(Long boardId){
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found with id: " + boardId));
+    }
+
+    private void checkMembership(User user, Board board){
+        if (board.getMembers().stream().noneMatch(member -> member.getId().equals(user.getId()))){
+            throw new UnauthorizedException("User is not a member of this board");
+        }
     }
 }
