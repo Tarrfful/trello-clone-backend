@@ -18,6 +18,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
@@ -45,6 +48,17 @@ public class TaskServiceImpl implements TaskService {
         Task savedTask = taskRepository.save(newTask);
 
         return mapTaskToTaskResponse(savedTask);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getAllTasks(Long listId){
+        TaskList taskList = checkMembershipAndGetTaskList(listId);
+
+        List<Task> tasks = taskRepository.findByTaskListIdOrderByTaskOrderAsc(listId);
+
+        return tasks.stream().map(this::mapTaskToTaskResponse)
+                .collect(Collectors.toList());
     }
 
     private TaskList checkMembershipAndGetTaskList(Long listId){
