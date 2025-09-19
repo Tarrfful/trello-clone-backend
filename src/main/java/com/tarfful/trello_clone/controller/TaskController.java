@@ -2,6 +2,7 @@ package com.tarfful.trello_clone.controller;
 
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
+import com.tarfful.trello_clone.dto.UpdateTaskRequest;
 import com.tarfful.trello_clone.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,3 +39,21 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 }
+
+@RestController
+@RequestMapping("/api/v1/tasks")
+@RequiredArgsConstructor
+class SingleTaskController{
+
+    private final TaskService taskService;
+
+    @PutMapping("/{taskId}")
+    public ResponseEntity<TaskResponse> updateTask(
+            @PathVariable Long taskId,
+            @RequestBody UpdateTaskRequest request
+            ){
+        TaskResponse updatedTask = taskService.updateTask(taskId, request);
+        return ResponseEntity.ok(updatedTask);
+    }
+}
+

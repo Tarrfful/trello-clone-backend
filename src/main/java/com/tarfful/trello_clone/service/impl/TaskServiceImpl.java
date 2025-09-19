@@ -2,7 +2,9 @@ package com.tarfful.trello_clone.service.impl;
 
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
+import com.tarfful.trello_clone.dto.UpdateTaskRequest;
 import com.tarfful.trello_clone.exception.TaskListNotFoundException;
+import com.tarfful.trello_clone.exception.TaskNotFoundException;
 import com.tarfful.trello_clone.exception.UnauthorizedException;
 import com.tarfful.trello_clone.model.Board;
 import com.tarfful.trello_clone.model.Task;
@@ -61,6 +63,20 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public TaskResponse updateTask(Long taskId, UpdateTaskRequest request){
+        Task taskToUpdate = getTaskOrThrow(taskId);
+
+        checkMembershipAndGetTaskList(taskToUpdate.getTaskList().getId());
+
+        taskToUpdate.setTitle(request.title());
+        taskToUpdate.setDescription(request.description());
+
+        Task updatedTask = taskRepository.save(taskToUpdate);
+        return mapTaskToTaskResponse(updatedTask);
+    }
+
     private TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -85,5 +101,10 @@ public class TaskServiceImpl implements TaskService {
                 task.getDescription(),
                 task.getTaskOrder()
         );
+    }
+
+    private Task getTaskOrThrow(Long taskId){
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
     }
 }
