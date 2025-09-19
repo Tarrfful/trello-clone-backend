@@ -7,6 +7,7 @@ import jdk.jfr.Frequency;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,5 +47,14 @@ public class TaskListController {
     ){
         TaskListResponse updatedList = taskListService.updateTaskList(boardId, listId, request);
         return ResponseEntity.ok(updatedList);
+    }
+
+    @DeleteMapping("/{listId}")
+    public ResponseEntity<Void> deleteTaskList(
+            @PathVariable Long boardId,
+            @PathVariable Long listId
+    ){
+        taskListService.deleteTaskList(boardId, listId);
+        return ResponseEntity.noContent().build();
     }
 }

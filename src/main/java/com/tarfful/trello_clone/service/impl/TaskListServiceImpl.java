@@ -82,6 +82,20 @@ public class TaskListServiceImpl implements TaskListService {
         return new TaskListResponse(updatedList.getId(), updatedList.getName(), updatedList.getListOrder());
     }
 
+    @Override
+    @Transactional
+    public void deleteTaskList(Long boardId, Long listId){
+        checkMembership(currentUser(), getBoardOrThrow(boardId));
+
+        TaskList taskList = getTaskListOrThrow(listId);
+
+        if (!taskList.getBoard().getId().equals(boardId)){
+            throw new InvalidOperationException("Task list does not belong to the specified board");
+        }
+
+        taskListRepository.delete(taskList);
+    }
+
     private User currentUser(){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsernameOrEmail(username, username)
@@ -103,6 +117,5 @@ public class TaskListServiceImpl implements TaskListService {
         return taskListRepository.findById(listId)
                 .orElseThrow(() -> new TaskListNotFoundException("Task list not found with id: " + listId));
     }
-
 
 }

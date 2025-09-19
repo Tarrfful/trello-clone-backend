@@ -11,4 +11,6 @@ public interface TaskListService {
     List<TaskListResponse> getAllTaskLists(Long boardId);
 
     TaskListResponse updateTaskList(Long boardId, Long listId, CreateTaskListRequest request);
+
+    void deleteTaskList(Long boardId, Long listId);
 }
