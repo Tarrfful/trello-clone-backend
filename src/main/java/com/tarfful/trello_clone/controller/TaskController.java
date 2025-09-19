@@ -7,6 +7,7 @@ import com.tarfful.trello_clone.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,6 +55,12 @@ class SingleTaskController{
             ){
         TaskResponse updatedTask = taskService.updateTask(taskId, request);
         return ResponseEntity.ok(updatedTask);
+    }
+
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId){
+        taskService.deleteTask(taskId);
+        return ResponseEntity.noContent().build();
     }
 }
 

@@ -77,6 +77,16 @@ public class TaskServiceImpl implements TaskService {
         return mapTaskToTaskResponse(updatedTask);
     }
 
+    @Override
+    @Transactional
+    public void deleteTask(Long taskId){
+        Task taskToDelete = getTaskOrThrow(taskId);
+
+        checkMembershipAndGetTaskList(taskToDelete.getTaskList().getId());
+
+        taskRepository.delete(taskToDelete);
+    }
+
     private TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
