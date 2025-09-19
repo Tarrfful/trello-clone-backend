@@ -63,4 +63,16 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(TaskListNotFoundException.class)
+    public ResponseEntity<Object> handleTaskListNotFoundException(TaskListNotFoundException ex, WebRequest request){
+        Map<String, Object> body = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.NOT_FOUND.value(),
+                "error", "Not Found",
+                "message", ex.getMessage(),
+                "path", request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
 }

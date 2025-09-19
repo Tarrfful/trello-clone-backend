@@ -3,6 +3,8 @@ package com.tarfful.trello_clone.service.impl;
 import com.tarfful.trello_clone.dto.CreateTaskListRequest;
 import com.tarfful.trello_clone.dto.TaskListResponse;
 import com.tarfful.trello_clone.exception.BoardNotFoundException;
+import com.tarfful.trello_clone.exception.InvalidOperationException;
+import com.tarfful.trello_clone.exception.TaskListNotFoundException;
 import com.tarfful.trello_clone.exception.UnauthorizedException;
 import com.tarfful.trello_clone.model.Board;
 import com.tarfful.trello_clone.model.TaskList;
@@ -63,6 +65,23 @@ public class TaskListServiceImpl implements TaskListService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public TaskListResponse updateTaskList(Long boardId, Long listId, CreateTaskListRequest request){
+        checkMembership(currentUser(), getBoardOrThrow(boardId));
+
+        TaskList taskList = getTaskListOrThrow(listId);
+
+        if (!taskList.getBoard().getId().equals(boardId)){
+            throw new InvalidOperationException("Task list does not belong to the specified board");
+        }
+
+        taskList.setName(request.name());
+        TaskList updatedList = taskListRepository.save(taskList);
+
+        return new TaskListResponse(updatedList.getId(), updatedList.getName(), updatedList.getListOrder());
+    }
+
     private User currentUser(){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsernameOrEmail(username, username)
@@ -79,4 +98,11 @@ public class TaskListServiceImpl implements TaskListService {
             throw new UnauthorizedException("User is not a member of this board");
         }
     }
+
+    private TaskList getTaskListOrThrow(Long listId){
+        return taskListRepository.findById(listId)
+                .orElseThrow(() -> new TaskListNotFoundException("Task list not found with id: " + listId));
+    }
+
+
 }
