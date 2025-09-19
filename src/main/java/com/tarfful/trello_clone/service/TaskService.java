@@ -1,6 +1,7 @@
 package com.tarfful.trello_clone.service;
 
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
+import com.tarfful.trello_clone.dto.MoveTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
 import com.tarfful.trello_clone.dto.UpdateTaskRequest;
 
@@ -14,4 +15,6 @@ public interface TaskService {
     TaskResponse updateTask(Long taskId, UpdateTaskRequest request);
 
     void deleteTask(Long taskId);
+
+    void moveTask(Long taskId, MoveTaskRequest request);
 }

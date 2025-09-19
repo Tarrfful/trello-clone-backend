@@ -1,6 +1,7 @@
 package com.tarfful.trello_clone.controller;
 
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
+import com.tarfful.trello_clone.dto.MoveTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
 import com.tarfful.trello_clone.dto.UpdateTaskRequest;
 import com.tarfful.trello_clone.service.TaskService;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,6 +63,15 @@ class SingleTaskController{
     public ResponseEntity<Void> deleteTask(@PathVariable Long taskId){
         taskService.deleteTask(taskId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{taskId}/move")
+    public ResponseEntity<Void> moveTask(
+            @PathVariable Long taskId,
+            @RequestBody MoveTaskRequest request
+            ){
+        taskService.moveTask(taskId, request);
+        return ResponseEntity.ok().build();
     }
 }
 

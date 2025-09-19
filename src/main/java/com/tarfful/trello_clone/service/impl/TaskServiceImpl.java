@@ -1,8 +1,10 @@
 package com.tarfful.trello_clone.service.impl;
 
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
+import com.tarfful.trello_clone.dto.MoveTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
 import com.tarfful.trello_clone.dto.UpdateTaskRequest;
+import com.tarfful.trello_clone.exception.InvalidOperationException;
 import com.tarfful.trello_clone.exception.TaskListNotFoundException;
 import com.tarfful.trello_clone.exception.TaskNotFoundException;
 import com.tarfful.trello_clone.exception.UnauthorizedException;
@@ -87,6 +89,39 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.delete(taskToDelete);
     }
 
+    @Override
+    @Transactional
+    public void moveTask(Long taskId, MoveTaskRequest request){
+        Task taskToMove = getTaskOrThrow(taskId);
+        TaskList sourceList = taskToMove.getTaskList();
+
+        checkMembershipAndGetTaskList(sourceList.getId());
+
+        TaskList destinationList = getTaskListOrThrow(request.newListId());
+
+        if (!sourceList.getBoard().getId().equals(destinationList.getBoard().getId())){
+            throw new InvalidOperationException("Cannot move tasks between different boards");
+        }
+
+        long tasksInDestinationList = taskRepository.countByTaskListId(destinationList.getId());
+
+        boolean isSameList = sourceList.getId().equals(destinationList.getId());
+
+        long maxPosition = isSameList ? tasksInDestinationList - 1 : tasksInDestinationList;
+
+        if (request.newPosition() < 0 || request.newPosition() > maxPosition){
+            throw new InvalidOperationException("Invalid new position for the task. Position must be between 0 and " + maxPosition);
+        }
+
+        taskRepository.shiftOrdersUp(sourceList.getId(), taskToMove.getTaskOrder());
+        taskRepository.shiftOrdersDown(destinationList.getId(), request.newPosition());
+
+        taskToMove.setTaskList(destinationList);
+        taskToMove.setTaskOrder(request.newPosition());
+
+        taskRepository.save(taskToMove);
+    }
+
     private TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -116,5 +151,10 @@ public class TaskServiceImpl implements TaskService {
     private Task getTaskOrThrow(Long taskId){
         return taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
+    }
+
+    private TaskList getTaskListOrThrow(Long listId){
+        return taskListRepository.findById(listId)
+                .orElseThrow(() -> new TaskListNotFoundException("Task list not found with id: " + listId));
     }
 }
