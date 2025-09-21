@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -47,4 +49,8 @@ public class Task {
      )
      @Builder.Default
      private Set<User> assignees = new HashSet<>();
+
+     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+     @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
 }
