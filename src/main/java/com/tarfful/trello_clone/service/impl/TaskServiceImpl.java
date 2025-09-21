@@ -17,6 +17,7 @@ import com.tarfful.trello_clone.model.User;
 import com.tarfful.trello_clone.repository.TaskListRepository;
 import com.tarfful.trello_clone.repository.TaskRepository;
 import com.tarfful.trello_clone.repository.UserRepository;
+import com.tarfful.trello_clone.service.ActivityProducerService;
 import com.tarfful.trello_clone.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,11 +36,14 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final UserRepository userRepository;
+    private final ActivityProducerService activityProducerService;
 
     @Override
     @Transactional
     public TaskResponse createTask(Long listId, CreateTaskRequest request){
-        TaskList taskList = checkMembershipAndGetTaskList(listId);
+        User currentUser = getCurrentUser();
+
+        TaskList taskList = getTaskListAndCheckMembership(listId, currentUser);
 
         int taskOrder = taskRepository.findMaxTaskOrderByTaskListId(listId)
                 .map(maxOrder -> maxOrder + 1)
@@ -54,13 +58,24 @@ public class TaskServiceImpl implements TaskService {
 
         Task savedTask = taskRepository.save(newTask);
 
+        String activityMessage = String.format(
+                "User '%s' created task '%s' in list '%s'",
+                currentUser.getUsername(),
+                savedTask.getTitle(),
+                taskList.getName()
+        );
+
+        activityProducerService.sendActivityMessage(activityMessage);
+
         return mapTaskToTaskResponse(savedTask);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasks(Long listId){
-        TaskList taskList = checkMembershipAndGetTaskList(listId);
+        User currentUser = getCurrentUser();
+
+        TaskList taskList = getTaskListAndCheckMembership(listId, currentUser);
 
         List<Task> tasks = taskRepository.findByTaskListIdOrderByTaskOrderAsc(listId);
 
@@ -71,9 +86,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse updateTask(Long taskId, UpdateTaskRequest request){
+        User currentUser = getCurrentUser();
+
         Task taskToUpdate = getTaskOrThrow(taskId);
 
-        checkMembershipAndGetTaskList(taskToUpdate.getTaskList().getId());
+        getTaskListAndCheckMembership(taskToUpdate.getTaskList().getId(), currentUser);
 
         taskToUpdate.setTitle(request.title());
         taskToUpdate.setDescription(request.description());
@@ -85,9 +102,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void deleteTask(Long taskId){
+        User currentUser = getCurrentUser();
+
         Task taskToDelete = getTaskOrThrow(taskId);
 
-        checkMembershipAndGetTaskList(taskToDelete.getTaskList().getId());
+        getTaskListAndCheckMembership(taskToDelete.getTaskList().getId(), currentUser);
 
         taskRepository.delete(taskToDelete);
     }
@@ -95,10 +114,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void moveTask(Long taskId, MoveTaskRequest request){
+        User currentUser = getCurrentUser();
+
         Task taskToMove = getTaskOrThrow(taskId);
         TaskList sourceList = taskToMove.getTaskList();
 
-        checkMembershipAndGetTaskList(sourceList.getId());
+        getTaskListAndCheckMembership(sourceList.getId(), currentUser);
 
         TaskList destinationList = getTaskListOrThrow(request.newListId());
 
@@ -128,8 +149,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse assignUserToTask(Long taskId, AssigneeRequest request){
+        User currentUser = getCurrentUser();
         Task task = getTaskOrThrow(taskId);
-        TaskList taskList = checkMembershipAndGetTaskList(task.getTaskList().getId());
+        TaskList taskList = getTaskListAndCheckMembership(task.getTaskList().getId(), currentUser);
 
         User userToAssign = userRepository.findById(request.userId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + request.userId()));
@@ -148,8 +170,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse unassignUserFromTask(Long taskId, Long assigneeId){
+        User currentUser = getCurrentUser();
         Task task = getTaskOrThrow(taskId);
-        checkMembershipAndGetTaskList(task.getTaskList().getId());
+        getTaskListAndCheckMembership(task.getTaskList().getId(), currentUser);
 
         task.getAssignees().removeIf(user -> user.getId().equals(assigneeId));
 
@@ -158,15 +181,19 @@ public class TaskServiceImpl implements TaskService {
         return mapTaskToTaskResponse(updatedTask);
     }
 
-    TaskList checkMembershipAndGetTaskList(Long listId){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsernameOrEmail(username, username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+    User getCurrentUser(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    TaskList getTaskListAndCheckMembership(Long listId, User user){
         TaskList taskList = taskListRepository.findById(listId)
                 .orElseThrow(() -> new TaskListNotFoundException("Task list not found with id: " + listId));
 
         Board board = taskList.getBoard();
+        User currentUser = getCurrentUser();
 
         if (board.getMembers().stream().noneMatch(member -> member.getId().equals(currentUser.getId()))){
             throw new UnauthorizedException("User is not a member of the board this task list belongs to");

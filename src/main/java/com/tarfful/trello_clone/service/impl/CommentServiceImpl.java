@@ -34,7 +34,8 @@ public class CommentServiceImpl implements CommentService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
 
-        taskServiceImpl.checkMembershipAndGetTaskList(task.getTaskList().getId());
+        User currentUser = taskServiceImpl.getCurrentUser();
+        taskServiceImpl.getTaskListAndCheckMembership(task.getTaskList().getId(), currentUser);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User author = userServiceImpl.findUserByUsername(username);
@@ -56,7 +57,8 @@ public class CommentServiceImpl implements CommentService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
 
-        taskServiceImpl.checkMembershipAndGetTaskList(task.getTaskList().getId());
+        User currentUser = taskServiceImpl.getCurrentUser();
+        taskServiceImpl.getTaskListAndCheckMembership(task.getTaskList().getId(), currentUser);
 
         List<Comment> comments = commentRepository.findByTaskIdOrderByCreatedAtAsc(taskId);
 
