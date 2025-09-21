@@ -10,6 +10,7 @@ import com.tarfful.trello_clone.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -82,6 +83,15 @@ class SingleTaskController{
             @RequestBody AssigneeRequest request
             ){
         TaskResponse updatedTask = taskService.assignUserToTask(taskId, request);
+        return ResponseEntity.ok(updatedTask);
+    }
+
+    @DeleteMapping("/{taskId}/assignees/{assigneeId}")
+    public ResponseEntity<TaskResponse> unassignUserFromTask(
+            @PathVariable Long taskId,
+            @PathVariable Long assigneeId
+    ){
+        TaskResponse updatedTask = taskService.unassignUserFromTask(taskId, assigneeId);
         return ResponseEntity.ok(updatedTask);
     }
 }

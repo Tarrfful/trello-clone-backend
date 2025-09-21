@@ -145,6 +145,19 @@ public class TaskServiceImpl implements TaskService {
         return mapTaskToTaskResponse(updatedTask);
     }
 
+    @Override
+    @Transactional
+    public TaskResponse unassignUserFromTask(Long taskId, Long assigneeId){
+        Task task = getTaskOrThrow(taskId);
+        checkMembershipAndGetTaskList(task.getTaskList().getId());
+
+        task.getAssignees().removeIf(user -> user.getId().equals(assigneeId));
+
+        Task updatedTask = taskRepository.save(task);
+
+        return mapTaskToTaskResponse(updatedTask);
+    }
+
     private TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)

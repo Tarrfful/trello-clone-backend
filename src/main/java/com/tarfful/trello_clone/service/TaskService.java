@@ -21,4 +21,6 @@ public interface TaskService {
     void moveTask(Long taskId, MoveTaskRequest request);
 
     TaskResponse assignUserToTask(Long taskId, AssigneeRequest request);
+
+    TaskResponse unassignUserFromTask(Long taskId, Long assigneeId);
 }
