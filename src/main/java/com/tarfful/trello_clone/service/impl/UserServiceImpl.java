@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,5 +41,11 @@ public class UserServiceImpl implements UserService {
 
         String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
         return jwtService.generateToken(username);
+    }
+
+    @Override
+    public User findUserByUsername(String username){
+        return userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 }

@@ -158,7 +158,7 @@ public class TaskServiceImpl implements TaskService {
         return mapTaskToTaskResponse(updatedTask);
     }
 
-    private TaskList checkMembershipAndGetTaskList(Long listId){
+    TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
