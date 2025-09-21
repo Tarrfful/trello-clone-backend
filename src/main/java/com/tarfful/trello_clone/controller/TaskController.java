@@ -1,9 +1,11 @@
 package com.tarfful.trello_clone.controller;
 
+import com.tarfful.trello_clone.dto.AssigneeRequest;
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
 import com.tarfful.trello_clone.dto.MoveTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
 import com.tarfful.trello_clone.dto.UpdateTaskRequest;
+import com.tarfful.trello_clone.model.Task;
 import com.tarfful.trello_clone.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -72,6 +74,15 @@ class SingleTaskController{
             ){
         taskService.moveTask(taskId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{taskId}/assignees")
+    public ResponseEntity<TaskResponse> assignUserToTask(
+            @PathVariable Long taskId,
+            @RequestBody AssigneeRequest request
+            ){
+        TaskResponse updatedTask = taskService.assignUserToTask(taskId, request);
+        return ResponseEntity.ok(updatedTask);
     }
 }
 

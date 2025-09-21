@@ -1,5 +1,7 @@
 package com.tarfful.trello_clone.service.impl;
 
+import com.tarfful.trello_clone.dto.AssigneeRequest;
+import com.tarfful.trello_clone.dto.AssigneeResponse;
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
 import com.tarfful.trello_clone.dto.MoveTaskRequest;
 import com.tarfful.trello_clone.dto.TaskResponse;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,6 +125,26 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.save(taskToMove);
     }
 
+    @Override
+    @Transactional
+    public TaskResponse assignUserToTask(Long taskId, AssigneeRequest request){
+        Task task = getTaskOrThrow(taskId);
+        TaskList taskList = checkMembershipAndGetTaskList(task.getTaskList().getId());
+
+        User userToAssign = userRepository.findById(request.userId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + request.userId()));
+
+        Board board = taskList.getBoard();
+        if (board.getMembers().stream().noneMatch(member -> member.getId().equals(userToAssign.getId()))){
+            throw new InvalidOperationException("Cannot assign a user who is not a member of the board");
+        }
+
+        task.getAssignees().add(userToAssign);
+        Task updatedTask = taskRepository.save(task);
+
+        return mapTaskToTaskResponse(updatedTask);
+    }
+
     private TaskList checkMembershipAndGetTaskList(Long listId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -140,11 +163,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskResponse mapTaskToTaskResponse(Task task){
+        Set<AssigneeResponse> assigneeResponses = task.getAssignees().stream()
+                .map(user -> new AssigneeResponse(user.getId(), user.getUsername()))
+                .collect(Collectors.toSet());
         return new TaskResponse(
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),
-                task.getTaskOrder()
+                task.getTaskOrder(),
+                assigneeResponses
         );
     }
 
