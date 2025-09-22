@@ -15,6 +15,8 @@ import com.tarfful.trello_clone.repository.UserRepository;
 import com.tarfful.trello_clone.service.ActivityProducerService;
 import com.tarfful.trello_clone.service.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public BoardResponse createBoard(CreateBoardRequest request){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -58,6 +61,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public List<BoardResponse> getUserBoards(){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -92,6 +96,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public BoardResponse updateBoard(Long boardId, UpdateBoardRequest request){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -114,6 +119,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public void deleteBoard(Long boardId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -131,6 +137,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public BoardResponse inviteMember(Long boardId, InviteMemberRequest request){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
@@ -173,6 +180,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userBoards", key = "'userBoards_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public BoardResponse removeMember(Long boardId, Long memberId){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsernameOrEmail(username, username)
