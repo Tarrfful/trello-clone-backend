@@ -3,6 +3,7 @@ package com.tarfful.trello_clone.controller;
 import com.tarfful.trello_clone.dto.CommentResponse;
 import com.tarfful.trello_clone.dto.CreateCommentRequest;
 import com.tarfful.trello_clone.service.CommentService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/tasks/{taskId}/comments")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class CommentController {
 
     private final CommentService commentService;
@@ -43,6 +45,7 @@ public class CommentController {
 @RestController
 @RequestMapping("/api/v1/comments")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 class SingleCommentController{
 
     private final CommentService commentService;

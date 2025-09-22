@@ -5,6 +5,7 @@ import com.tarfful.trello_clone.dto.CreateBoardRequest;
 import com.tarfful.trello_clone.dto.InviteMemberRequest;
 import com.tarfful.trello_clone.dto.UpdateBoardRequest;
 import com.tarfful.trello_clone.service.BoardService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class BoardController {
     private final BoardService boardService;
 

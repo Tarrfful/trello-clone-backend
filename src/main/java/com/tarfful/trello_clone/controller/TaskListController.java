@@ -3,6 +3,7 @@ package com.tarfful.trello_clone.controller;
 import com.tarfful.trello_clone.dto.CreateTaskListRequest;
 import com.tarfful.trello_clone.dto.TaskListResponse;
 import com.tarfful.trello_clone.service.TaskListService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jdk.jfr.Frequency;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/boards/{boardId}/lists")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class TaskListController {
     private final TaskListService taskListService;
 

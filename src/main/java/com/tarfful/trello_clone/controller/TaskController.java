@@ -7,6 +7,7 @@ import com.tarfful.trello_clone.dto.TaskResponse;
 import com.tarfful.trello_clone.dto.UpdateTaskRequest;
 import com.tarfful.trello_clone.model.Task;
 import com.tarfful.trello_clone.service.TaskService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/lists/{listId}/tasks")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class TaskController {
     private final TaskService taskService;
 
@@ -49,6 +51,7 @@ public class TaskController {
 @RestController
 @RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 class SingleTaskController{
 
     private final TaskService taskService;
