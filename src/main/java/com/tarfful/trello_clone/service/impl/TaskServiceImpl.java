@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
                 LocalDateTime.now()
         );
 
-        activityProducerService.sendActivityMessage(event);
+        activityProducerService.sendActivityEvent(event);
 
         return mapTaskToTaskResponse(savedTask);
     }
@@ -153,6 +153,22 @@ public class TaskServiceImpl implements TaskService {
         taskToMove.setTaskOrder(request.newPosition());
 
         taskRepository.save(taskToMove);
+
+        String activityMessage = String.format(
+                "User '%s' moved task '%s' from list '%s' to list '%s'",
+                currentUser.getUsername(),
+                taskToMove.getTitle(),
+                sourceList.getName(),
+                destinationList.getName()
+        );
+
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                destinationList.getBoard().getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
     }
 
     @Override
@@ -173,6 +189,20 @@ public class TaskServiceImpl implements TaskService {
         task.getAssignees().add(userToAssign);
         Task updatedTask = taskRepository.save(task);
 
+        String activityMessage = String.format(
+                "User '%s' assigned user '%s' to task '%s'",
+                currentUser.getUsername(),
+                userToAssign.getUsername(),
+                task.getTitle()
+        );
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                taskList.getBoard().getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
+
         return mapTaskToTaskResponse(updatedTask);
     }
 
@@ -183,9 +213,26 @@ public class TaskServiceImpl implements TaskService {
         Task task = getTaskOrThrow(taskId);
         getTaskListAndCheckMembership(task.getTaskList().getId(), currentUser);
 
+        User userToUnassign = userRepository.findById(assigneeId)
+                        .orElseThrow(() -> new UsernameNotFoundException("User to unassign not found"));
+
         task.getAssignees().removeIf(user -> user.getId().equals(assigneeId));
 
         Task updatedTask = taskRepository.save(task);
+
+        String activityMessage = String.format(
+                "User '%s' unassigned user '%s' from task '%s'",
+                currentUser.getUsername(),
+                userToUnassign.getUsername(),
+                task.getTitle()
+        );
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                task.getTaskList().getBoard().getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
 
         return mapTaskToTaskResponse(updatedTask);
     }

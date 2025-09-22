@@ -1,5 +1,6 @@
 package com.tarfful.trello_clone.service.impl;
 
+import com.tarfful.trello_clone.dto.ActivityEvent;
 import com.tarfful.trello_clone.dto.BoardResponse;
 import com.tarfful.trello_clone.dto.CreateBoardRequest;
 import com.tarfful.trello_clone.dto.InviteMemberRequest;
@@ -11,6 +12,7 @@ import com.tarfful.trello_clone.model.Board;
 import com.tarfful.trello_clone.model.User;
 import com.tarfful.trello_clone.repository.BoardRepository;
 import com.tarfful.trello_clone.repository.UserRepository;
+import com.tarfful.trello_clone.service.ActivityProducerService;
 import com.tarfful.trello_clone.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collector;
@@ -29,6 +32,8 @@ public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final ActivityProducerService activityProducerService;
+
 
     @Override
     @Transactional
@@ -148,6 +153,21 @@ public class BoardServiceImpl implements BoardService {
         board.getMembers().add(userToInvite);
         Board updatedBoard = boardRepository.save(board);
 
+        String activityMessage = String.format(
+                "User '%s' invited user '%s' to board '%s'",
+                currentUser.getUsername(),
+                userToInvite.getUsername(),
+                board.getName()
+        );
+
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                board.getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
+
         return mapBoardToBoardResponse(updatedBoard);
     }
 
@@ -179,6 +199,21 @@ public class BoardServiceImpl implements BoardService {
         }
 
         Board updatedBoard = boardRepository.save(board);
+
+        String activityMessage = String.format(
+                "User '%s' removed user '%s' from board '%s'",
+                currentUser.getUsername(),
+                userToRemove.getUsername(),
+                board.getName()
+        );
+
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                board.getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
 
         return mapBoardToBoardResponse(updatedBoard);
     }

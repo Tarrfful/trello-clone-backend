@@ -1,5 +1,6 @@
 package com.tarfful.trello_clone.service.impl;
 
+import com.tarfful.trello_clone.dto.ActivityEvent;
 import com.tarfful.trello_clone.dto.CreateTaskListRequest;
 import com.tarfful.trello_clone.dto.TaskListResponse;
 import com.tarfful.trello_clone.exception.BoardNotFoundException;
@@ -12,15 +13,15 @@ import com.tarfful.trello_clone.model.User;
 import com.tarfful.trello_clone.repository.BoardRepository;
 import com.tarfful.trello_clone.repository.TaskListRepository;
 import com.tarfful.trello_clone.repository.UserRepository;
+import com.tarfful.trello_clone.service.ActivityProducerService;
 import com.tarfful.trello_clone.service.TaskListService;
-import jakarta.persistence.Lob;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Currency;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,7 @@ public class TaskListServiceImpl implements TaskListService {
     private final TaskListRepository taskListRepository;
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final ActivityProducerService activityProducerService;
 
     @Override
     @Transactional
@@ -49,6 +51,21 @@ public class TaskListServiceImpl implements TaskListService {
                 .build();
 
         TaskList savedList = taskListRepository.save(newTaskList);
+
+        String activityMessage = String.format(
+                "User '%s' created list '%s' on board '%s'",
+                currentUser().getUsername(),
+                newTaskList.getName(),
+                board.getName()
+        );
+
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                board.getId(),
+                currentUser().getId(),
+                LocalDateTime.now()
+        );
+        activityProducerService.sendActivityEvent(event);
 
         return new TaskListResponse(savedList.getId(), savedList.getName(), savedList.getListOrder());
     }

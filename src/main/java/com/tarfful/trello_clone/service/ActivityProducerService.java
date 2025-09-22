@@ -17,7 +17,7 @@ public class ActivityProducerService {
     @Value("${app.kafka.topic.activity}")
     private String activityTopic;
 
-    public void sendActivityMessage(ActivityEvent event){
+    public void sendActivityEvent(ActivityEvent event){
         try{
             kafkaTemplate.send(activityTopic, event);
             log.info("Successfully sent activity message to topic {}: {}", activityTopic, event);
