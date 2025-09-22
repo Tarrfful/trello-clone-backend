@@ -1,5 +1,6 @@
 package com.tarfful.trello_clone.service.impl;
 
+import com.tarfful.trello_clone.dto.ActivityEvent;
 import com.tarfful.trello_clone.dto.AssigneeRequest;
 import com.tarfful.trello_clone.dto.AssigneeResponse;
 import com.tarfful.trello_clone.dto.CreateTaskRequest;
@@ -25,6 +26,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,7 +67,14 @@ public class TaskServiceImpl implements TaskService {
                 taskList.getName()
         );
 
-        activityProducerService.sendActivityMessage(activityMessage);
+        ActivityEvent event = new ActivityEvent(
+                activityMessage,
+                taskList.getBoard().getId(),
+                currentUser.getId(),
+                LocalDateTime.now()
+        );
+
+        activityProducerService.sendActivityMessage(event);
 
         return mapTaskToTaskResponse(savedTask);
     }
